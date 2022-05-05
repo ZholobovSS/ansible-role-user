@@ -1,38 +1,33 @@
-Role Name
+Ansible Role: create_user
 =========
 
-A brief description of the role goes here.
-
-Requirements
-------------
-
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+Creates a user and places it in the specified group. Adds your local public ssh key for passwordless access
 
 Role Variables
 --------------
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+    user_name: #enter name of the new user (required)
+    user_group: #enter name of the new group (required)
+    action: install <- default value (have default value)
+    path_to_local_key: #enter FULL PATH to your local id_rsa.pub file (required)
 
-Dependencies
-------------
-
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
 
 Example Playbook
 ----------------
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+    ---
+    - hosts: all
+      become: yes
+      vars_files:
+        - vars/main.yml
 
-    - hosts: servers
       roles:
-         - { role: username.rolename, x: 42 }
+        - { role: zh2s.create_user }
 
-License
+*Inside `vars/main.yml`*
 -------
 
-BSD
+    path_to_local_key: /Users/yourLocalUsername/.ssh/id_rsa.pub
+    user_name: newUser
+    user_group: newGroup
 
-Author Information
-------------------
-
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).

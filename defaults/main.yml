@@ -1,2 +1,5 @@
 ---
-# defaults file for zh2s.create_user
+user_name:
+user_group:
+action: install
+path_to_local_key:

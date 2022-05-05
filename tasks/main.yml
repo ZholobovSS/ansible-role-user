@@ -1,2 +1,73 @@
 ---
-# tasks file for zh2s.create_user
+# CHECK LOCAL PUB KEY
+
+- ansible.builtin.debug:
+    var: action
+
+- name: Check all variables have value
+  ansible.builtin.fail:
+    msg: File path_to_local_key.pub does not exist
+  when: vars[item] == "" or vars[item] == None
+  loop:
+    - user_name
+    - user_group
+    - action
+    - path_to_local_key
+
+# INSTALL ACTIONS
+- block:
+    - name: Create the {{user_group}} group
+      ansible.builtin.group:
+        name: "{{user_group}}"
+        state: present
+
+    - name: Create the {{user_name}} user
+      ansible.builtin.user:
+        name: "{{user_name}}"
+        append: yes
+        state: present
+        groups: "{{user_group}}"
+        createhome: yes
+        shell: /bin/bash
+
+    - name: Allow '{{user_name}}' to have passwordless sudo
+      ansible.builtin.lineinfile:
+        dest: /etc/sudoers
+        state: present
+        line: "{{user_name}} ALL=(ALL) NOPASSWD: ALL"
+        validate: visudo -cf %s
+
+    - name: Set up authorized key for the {{user_name}} user
+      ansible.posix.authorized_key:
+        user: "{{user_name}}"
+        key: "{{ lookup('file', '{{path_to_local_key}}') }}"
+
+  when: action == "install"
+
+# UNINSTALL ACTIONS
+- block:
+    - name: Remove authorized key for the {{user_name}} user
+      ansible.posix.authorized_key:
+        user: "{{user_name}}"
+        state: absent
+        key: "{{ lookup('file', '{{path_to_local_key}}') }}"
+
+    - name: Remove the {{user_name}} user
+      ansible.builtin.user:
+        name: "{{user_name}}"
+        remove: yes
+        state: absent
+
+    - name: Remove the {{user_group}} group
+      ansible.builtin.group:
+        name: "{{user_group}}"
+        state: absent
+
+    - name: Delete permissions for {{user_name}}
+      ansible.builtin.lineinfile:
+        dest: /etc/sudoers
+        state: absent
+        line: "{{user_name}} ALL=(ALL) NOPASSWD: ALL"
+        validate: visudo -cf %s
+
+  when: action == 'uninstall'
