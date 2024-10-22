@@ -1,7 +1,8 @@
 ---
 # CHECK LOCAL PUB KEY
 
-- ansible.builtin.debug:
+- name: Turn on debug mode
+  ansible.builtin.debug:
     var: action
 
 - name: Check all variables have value
@@ -14,60 +15,59 @@
     - action
     - path_to_local_key
 
-# INSTALL ACTIONS
-- block:
-    - name: Create the {{user_group}} group
+- name: Install actions
+  when: action == "install"
+  block:
+    - name: "Create group: {{ user_group }}"
       ansible.builtin.group:
-        name: "{{user_group}}"
+        name: "{{ user_group }}"
         state: present
 
-    - name: Create the {{user_name}} user
+    - name: "Create user: {{ user_name }}"
       ansible.builtin.user:
-        name: "{{user_name}}"
-        append: yes
+        name: "{{ user_name }}"
+        append: true
         state: present
-        groups: "{{user_group}}"
-        createhome: yes
+        groups: "{{ user_group }}"
+        createhome: true
         shell: /bin/bash
 
-    - name: Allow '{{user_name}}' to have passwordless sudo
+    - name: "Allow to have passwordless sudo for user: {{ user_name }}"
       ansible.builtin.lineinfile:
         dest: /etc/sudoers
         state: present
-        line: "{{user_name}} ALL=(ALL) NOPASSWD: ALL"
+        line: "{{ user_name }} ALL=(ALL) NOPASSWD: ALL"
         validate: visudo -cf %s
 
-    - name: Set up authorized key for the {{user_name}} user
+    - name: "Set up authorized key for user: {{ user_name }}"
       ansible.posix.authorized_key:
-        user: "{{user_name}}"
+        user: "{{ user_name }}"
         key: "{{ lookup('file', '{{path_to_local_key}}') }}"
-
-  when: action == "install"
 
 # UNINSTALL ACTIONS
-- block:
-    - name: Remove authorized key for the {{user_name}} user
+- name: Uninstall actions
+  when: action == 'uninstall'
+  block:
+    - name: "Remove authorized key for user: {{ user_name }}"
       ansible.posix.authorized_key:
-        user: "{{user_name}}"
+        user: "{{ user_name }}"
         state: absent
         key: "{{ lookup('file', '{{path_to_local_key}}') }}"
 
-    - name: Remove the {{user_name}} user
+    - name: "Remove user: {{ user_name }}"
       ansible.builtin.user:
-        name: "{{user_name}}"
-        remove: yes
+        name: "{{ user_name }}"
+        remove: true
         state: absent
 
-    - name: Remove the {{user_group}} group
+    - name: "Remove group: {{ user_group }}"
       ansible.builtin.group:
-        name: "{{user_group}}"
+        name: "{{ user_group }}"
         state: absent
 
-    - name: Delete permissions for {{user_name}}
+    - name: "Delete permissions for user: {{ user_name }}"
       ansible.builtin.lineinfile:
         dest: /etc/sudoers
         state: absent
-        line: "{{user_name}} ALL=(ALL) NOPASSWD: ALL"
+        line: "{{ user_name }} ALL=(ALL) NOPASSWD: ALL"
         validate: visudo -cf %s
-
-  when: action == 'uninstall'

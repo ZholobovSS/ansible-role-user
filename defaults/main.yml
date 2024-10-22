@@ -1,5 +1,5 @@
 ---
 user_name:
 user_group:
-action: install
+task: install
 path_to_local_key:
