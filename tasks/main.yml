@@ -12,11 +12,11 @@
   loop:
     - user_name
     - user_group
-    - action
+    - task
     - path_to_local_key
 
-- name: Install actions
-  when: action == "install"
+- name: Install tasks
+  when: task == "install"
   block:
     - name: "Create group: {{ user_group }}"
       ansible.builtin.group:
@@ -44,9 +44,8 @@
         user: "{{ user_name }}"
         key: "{{ lookup('file', '{{path_to_local_key}}') }}"
 
-# UNINSTALL ACTIONS
-- name: Uninstall actions
-  when: action == 'uninstall'
+- name: Uninstall tasks
+  when: task == 'uninstall'
   block:
     - name: "Remove authorized key for user: {{ user_name }}"
       ansible.posix.authorized_key:
