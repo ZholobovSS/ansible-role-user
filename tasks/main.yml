@@ -44,6 +44,15 @@
         user: "{{ user_name }}"
         key: "{{ lookup('file', '{{path_to_local_key}}') }}"
 
+    - name: "Create symbolic link to root .vimrc file"
+      ansible.builtin.file:
+        src: /root/.vimrc
+        dest: "/home/{{ user_name }}/.vimrc"
+        owner: "{{ user_name }}"
+        group: "{{ user_name }}"
+        mode: "0644"
+        state: link
+
 - name: Uninstall tasks
   when: task == 'uninstall'
   block:
